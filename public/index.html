@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ELS — Equipment Logging System</title>
+    <!-- Google Fonts & FontAwesome for minimalist icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --sidebar-bg: #111827;
+            --sidebar-hover: #1f2937;
+            --main-bg: #f3f4f6;
+            --card-bg: #ffffff;
+            --text-main: #111827;
+            --text-muted: #6b7280;
+            --accent-orange: #f97316;
+            --accent-hover: #ea580c;
+            --border-color: #e5e7eb;
+            --radius: 10px;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+        body { background: var(--main-bg); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; }
+
+        /* SIDEBAR NAVIGATION */
+        aside {
+            width: 260px;
+            background: var(--sidebar-bg);
+            color: #9ca3af;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 24px 16px;
+            border-right: 1px solid #1f2937;
+            transition: transform 0.3s ease;
+            z-index: 100;
+        }
+        .logo-area {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            color: white;
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 32px;
+            padding-left: 8px;
+        }
+        .logo-area div { display: flex; align-items: center; gap: 12px; }
+        .logo-area i { color: var(--accent-orange); font-size: 22px; }
+        .close-sidebar { display: none; background: none; border: none; color: #9ca3af; font-size: 20px; cursor: pointer; }
+
+        .nav-links { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+        .nav-links a {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            color: #9ca3af;
+            text-decoration: none;
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        .nav-links a:hover, .nav-links a.active {
+            background: var(--sidebar-hover);
+            color: white;
+        }
+        .nav-links a.active i { color: var(--accent-orange); }
+
+        .sidebar-footer {
+            font-size: 12px;
+            color: #4b5563;
+            padding-left: 8px;
+        }
+
+        /* MAIN CONTENT WRAPPER */
+        main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            width: 100%;
+        }
+
+        /* TOP HEADER */
+        header {
+            background: var(--card-bg);
+            padding: 16px 24px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+        }
+        .header-left { display: flex; align-items: center; gap: 16px; }
+        .menu-toggle { display: none; background: none; border: none; font-size: 20px; color: var(--text-main); cursor: pointer; }
+        .header-title h2 { font-size: 18px; font-weight: 600; color: var(--text-main); }
+        .header-title p { font-size: 12px; color: var(--text-muted); display: none; }
+        
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        .user-avatar {
+            width: 36px; height: 36px;
+            background: #ffedd5;
+            color: var(--accent-orange);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+        }
+
+        /* DASHBOARD CONTENT AREA */
+        .content-body {
+            padding: 20px;
+            max-width: 1400px;
+            width: 100%;
+            margin: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        /* CARD STYLING */
+        .card {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            border: 1px solid var(--border-color);
+            padding: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+        }
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .card-header h3 { font-size: 15px; font-weight: 600; display: flex; align-items: center; gap: 10px; }
+        .card-header h3 i { color: var(--accent-orange); }
+
+        /* GRID LAYOUT FOR TOP FORMS */
+        .grid-2col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        /* FORM CONTROLS */
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-bottom: 14px;
+        }
+        label { font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+        input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 14px;
+            outline: none;
+            transition: border 0.2s;
+        }
+        input:focus { border-color: var(--accent-orange); box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.1); }
+
+        /* BUTTONS */
+        .btn {
+            background: var(--accent-orange);
+            color: white;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: background 0.2s, transform 0.1s;
+        }
+        .btn:hover { background: var(--accent-hover); }
+        .btn:active { transform: scale(0.98); }
+        .btn-subtle {
+            background: #f3f4f6;
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+            padding: 8px 14px;
+            font-size: 13px;
+        }
+        .btn-subtle:hover { background: #e5e7eb; }
+
+        /* TABLES */
+        .table-container { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        table { width: 100%; border-collapse: collapse; text-align: left; min-width: 600px; }
+        th { font-size: 11px; font-weight: 600; color: var(--text-muted); background: #f9fafb; padding: 12px 14px; border-bottom: 1px solid var(--border-color); text-transform: uppercase; }
+        td { padding: 12px 14px; font-size: 13px; border-bottom: 1px solid var(--border-color); }
+        tr:hover td { background: #fafafa; }
+
+        /* NOTIFICATION MESSAGES */
+        .msg { font-size: 13px; font-weight: 500; margin-top: 10px; padding: 8px 12px; border-radius: 6px; display: none; }
+        .msg.success { background: #ecfdf5; color: #059669; display: block; border: 1px solid #a7f3d0; }
+        .msg.error { background: #fef2f2; color: #dc2626; display: block; border: 1px solid #fecaca; }
+
+        /* STATUS BADGES */
+        .badge {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        .badge.borrowed { background: #ffedd5; color: #c2410c; }
+        .badge.returned { background: #d1fae5; color: #047857; }
+
+        /* HIDE SECTIONS FOR TAB NAVIGATION */
+        .tab-content { display: none; }
+        .tab-content.active { display: flex; flex-direction: column; gap: 20px; }
+
+        /* OVERLAY FOR MOBILE SIDEBAR */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 90;
+        }
+        .sidebar-overlay.active { display: block; }
+
+        /* RESPONSIVE MEDIA QUERIES */
+        @media (min-width: 768px) {
+            .header-title p { display: block; }
+            .content-body { padding: 32px; gap: 24px; }
+        }
+
+        @media (max-width: 1024px) {
+            .grid-2col { grid-template-columns: 1fr; }
+        }
+
+        @media (max-width: 768px) {
+            aside {
+                position: fixed;
+                top: 0; left: -260px;
+                height: 100%;
+                box-shadow: 4px 0 15px rgba(0,0,0,0.1);
+            }
+            aside.mobile-open { left: 0; }
+            .close-sidebar { display: block; }
+            .menu-toggle { display: block; }
+            header { padding: 12px 16px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- SIDEBAR OVERLAY FOR MOBILE -->
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
+    <!-- SIDEBAR -->
+    <aside id="sidebar">
+        <div>
+            <div class="logo-area">
+                <div>
+                    <i class="fa-solid fa-boxes-stacked"></i>
+                    <span>ELS Stockroom</span>
+                </div>
+                <button class="close-sidebar" onclick="toggleSidebar()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <ul class="nav-links">
+                <li><a href="#" onclick="switchTab('dashboard', event)" class="active" id="nav-dashboard"><i class="fa-solid fa-chart-pie"></i> Dashboard</a></li>
+                <li><a href="#" onclick="switchTab('inventory', event)" id="nav-inventory"><i class="fa-solid fa-toolbox"></i> Inventory</a></li>
+                <li><a href="#" onclick="switchTab('borrow', event)" id="nav-borrow"><i class="fa-solid fa-hand-holding-hand"></i> Release / Borrow</a></li>
+                <li><a href="#" onclick="switchTab('active', event)" id="nav-active"><i class="fa-solid fa-clock-rotate-left"></i> Active On-Site</a></li>
+                <li><a href="#" onclick="switchTab('history', event)" id="nav-history"><i class="fa-solid fa-file-lines"></i> Audit History</a></li>
+            </ul>
+        </div>
+        <div class="sidebar-footer">
+            <p>ELS v1.0 • Neon DB Connected</p>
+        </div>
+    </aside>
+
+    <!-- MAIN VIEW -->
+    <main>
+        <header>
+            <div class="header-left">
+                <button class="menu-toggle" onclick="toggleSidebar()"><i class="fa-solid fa-bars"></i></button>
+                <div class="header-title">
+                    <h2 id="pageTitle">Warehouse Dashboard</h2>
+                    <p>Manage and track construction tools & equipment in real time.</p>
+                </div>
+            </div>
+            <div class="user-profile">
+                <div class="user-avatar">SC</div>
+                <span style="display: none; @media(min-width: 600px){display:inline;}">Stockroom Clerk</span>
+            </div>
+        </header>
+
+        <div class="content-body">
+
+            <!-- TAB 1: DASHBOARD & ADD EQUIPMENT -->
+            <div id="tab-dashboard" class="tab-content active">
+                <div class="grid-2col">
+                    <!-- Add Equipment Card -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3><i class="fa-solid fa-plus-circle"></i> Add New Equipment</h3>
+                        </div>
+                        <div class="form-group">
+                            <label>Stockroom Secret Password</label>
+                            <input type="password" id="adminPassword" placeholder="Enter security password">
+                        </div>
+                        <div class="form-group">
+                            <label>Equipment Name</label>
+                            <input type="text" id="eqName" placeholder="e.g., Heavy Duty Grinder">
+                        </div>
+                        <div class="form-group">
+                            <label>Total Quantity</label>
+                            <input type="number" id="eqQty" placeholder="e.g., 10">
+                        </div>
+                        <button class="btn" onclick="addEquipment()" style="width: 100%;"><i class="fa-solid fa-check"></i> Save Equipment</button>
+                        <div id="eqMsg" class="msg"></div>
+                    </div>
+
+                    <!-- Quick Stats Overview -->
+                    <div class="card" style="display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; background: linear-gradient(135deg, #fff7ed 0%, #ffffff 100%); border-color: #fed7aa;">
+                        <i class="fa-solid fa-helmet-safety" style="font-size: 42px; color: var(--accent-orange); margin-bottom: 12px;"></i>
+                        <h3 style="font-size: 18px; margin-bottom: 6px;">Equipment Logging System</h3>
+                        <p style="color: var(--text-muted); font-size: 13px; max-width: 300px; line-height: 1.5;">
+                            Keep track of tools released to workers and active project sites with automated inventory deductions.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Quick Inventory Preview -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3><i class="fa-solid fa-warehouse"></i> Current Inventory Snapshot</h3>
+                        <button class="btn btn-subtle" onclick="loadEquipment()"><i class="fa-solid fa-rotate"></i> Refresh</button>
+                    </div>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Equipment Name</th>
+                                    <th>Total Qty</th>
+                                    <th>Available Qty</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dashEquipmentBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 2: INVENTORY LIST -->
+            <div id="tab-inventory" class="tab-content">
+                <div class="card">
+                    <div class="card-header">
+                        <h3><i class="fa-solid fa-toolbox"></i> Complete Equipment Inventory</h3>
+                        <button class="btn btn-subtle" onclick="loadEquipment()"><i class="fa-solid fa-rotate"></i> Refresh</button>
+                    </div>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Equipment Name</th>
+                                    <th>Total Quantity</th>
+                                    <th>Available Quantity</th>
+                                </tr>
+                            </thead>
+                            <tbody id="inventoryTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 3: BORROW EQUIPMENT -->
+            <div id="tab-borrow" class="tab-content">
+                <div class="card" style="max-width: 600px; margin: 0 auto; width: 100%;">
+                    <div class="card-header">
+                        <h3><i class="fa-solid fa-hand-holding-hand"></i> Release Equipment to Worker</h3>
+                    </div>
+                    <div class="form-group">
+                        <label>Equipment ID</label>
+                        <input type="number" id="borrowEqId" placeholder="Enter Equipment ID from Inventory">
+                    </div>
+                    <div class="form-group">
+                        <label>Worker Name</label>
+                        <input type="text" id="borrowWorker" placeholder="e.g., Juan Dela Cruz">
+                    </div>
+                    <div class="form-group">
+                        <label>Project / Site Name</label>
+                        <input type="text" id="borrowProject" placeholder="e.g., Tower A Construction">
+                    </div>
+                    <div class="form-group">
+                        <label>Quantity Borrowed</label>
+                        <input type="number" id="borrowQty" placeholder="Number of units">
+                    </div>
+                    <button class="btn" onclick="borrowEquipment()" style="width: 100%; margin-top: 10px;"><i class="fa-solid fa-paper-plane"></i> Confirm Release</button>
+                    <div id="borrowMsg" class="msg"></div>
+                </div>
+            </div>
+
+            <!-- TAB 4: ACTIVE ON-SITE TOOLS -->
+            <div id="tab-active" class="tab-content">
+                <div class="card">
+                    <div class="card-header">
+                        <h3><i class="fa-solid fa-clock-rotate-left"></i> Active Tools On-Site</h3>
+                        <button class="btn btn-subtle" onclick="loadActiveTools()"><i class="fa-solid fa-rotate"></i> Refresh</button>
+                    </div>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Tx ID</th>
+                                    <th>Equipment</th>
+                                    <th>Worker</th>
+                                    <th>Project</th>
+                                    <th>Qty</th>
+                                    <th>Date Borrowed</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="activeTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 5: AUDIT HISTORY -->
+            <div id="tab-history" class="tab-content">
+                <div class="card">
+                    <div class="card-header">
+                        <h3><i class="fa-solid fa-file-lines"></i> Full Transaction History & Audit Trail</h3>
+                        <button class="btn btn-subtle" onclick="loadHistory()"><i class="fa-solid fa-rotate"></i> Refresh</button>
+                    </div>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Tx ID</th>
+                                    <th>Equipment</th>
+                                    <th>Worker</th>
+                                    <th>Project</th>
+                                    <th>Qty</th>
+                                    <th>Date Borrowed</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="historyTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <script>
+        const API_BASE = 'http://localhost:3000/api';
+
+        window.onload = () => {
+            loadEquipment();
+            loadActiveTools();
+            loadHistory();
+        };
+
+        // Mobile Sidebar Toggle
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('mobile-open');
+            document.getElementById('sidebarOverlay').classList.toggle('active');
+        }
+
+        // Sidebar Tab Switching
+        function switchTab(tabName, event) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-links a').forEach(el => el.classList.remove('active'));
+            
+            document.getElementById(`tab-${tabName}`).classList.add('active');
+            event.currentTarget.classList.add('active');
+
+            const titles = {
+                'dashboard': ['Warehouse Dashboard', 'Manage and track construction tools & equipment in real time.'],
+                'inventory': ['Complete Inventory', 'View all stock levels and equipment availability.'],
+                'borrow': ['Release Equipment', 'Issue tools and equipment to project workers.'],
+                'active': ['Active On-Site Tools', 'Monitor tools currently deployed at construction sites.'],
+                'history': ['Audit History', 'Complete permanent log of all borrow and return records.']
+            };
+            document.getElementById('pageTitle').innerText = titles[tabName][0];
+
+            // Close sidebar automatically on mobile when a link is clicked
+            if (window.innerWidth <= 768) {
+                toggleSidebar();
+            }
+        }
+
+        // 1. Add Equipment
+        async function addEquipment() {
+            const password = document.getElementById('adminPassword').value;
+            const equipment_name = document.getElementById('eqName').value;
+            const total_quantity = parseInt(document.getElementById('eqQty').value);
+            const msg = document.getElementById('eqMsg');
+
+            try {
+                const res = await fetch(`${API_BASE}/equipment`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'stockroom-password': password },
+                    body: JSON.stringify({ equipment_name, total_quantity })
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    msg.className = 'msg success';
+                    msg.innerText = data.message;
+                    loadEquipment();
+                } else {
+                    msg.className = 'msg error';
+                    msg.innerText = data.error;
+                }
+            } catch (err) { console.error(err); }
+        }
+
+        // 2. Load Equipment Inventory
+        async function loadEquipment() {
+            try {
+                const res = await fetch(`${API_BASE}/equipment`);
+                const data = await res.json();
+                
+                const populateTable = (elementId) => {
+                    const tbody = document.getElementById(elementId);
+                    if (!tbody) return;
+                    tbody.innerHTML = '';
+                    data.equipment.forEach(item => {
+                        tbody.innerHTML += `
+                            <tr>
+                                <td><strong>#${item.equipment_id}</strong></td>
+                                <td>${item.equipment_name}</td>
+                                <td>${item.total_quantity}</td>
+                                <td><span style="font-weight: 600; color: ${item.available_quantity > 0 ? '#059669' : '#dc2626'};">${item.available_quantity}</span></td>
+                            </tr>
+                        `;
+                    });
+                };
+
+                populateTable('dashEquipmentBody');
+                populateTable('inventoryTableBody');
+            } catch (err) { console.error(err); }
+        }
+
+        // 3. Borrow Equipment
+        async function borrowEquipment() {
+            const equipment_id = parseInt(document.getElementById('borrowEqId').value);
+            const worker_name = document.getElementById('borrowWorker').value;
+            const project_name = document.getElementById('borrowProject').value;
+            const quantity_borrowed = parseInt(document.getElementById('borrowQty').value);
+            const msg = document.getElementById('borrowMsg');
+
+            try {
+                const res = await fetch(`${API_BASE}/transaction/borrow`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ equipment_id, worker_name, project_name, quantity_borrowed })
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    msg.className = 'msg success';
+                    msg.innerText = data.message;
+                    loadEquipment();
+                    loadActiveTools();
+                    loadHistory();
+                } else {
+                    msg.className = 'msg error';
+                    msg.innerText = data.error;
+                }
+            } catch (err) { console.error(err); }
+        }
+
+        // 4. Load Active Tools
+        async function loadActiveTools() {
+            try {
+                const res = await fetch(`${API_BASE}/transaction/active`);
+                const data = await res.json();
+                const tbody = document.getElementById('activeTableBody');
+                tbody.innerHTML = '';
+                data.active_borrowings.forEach(item => {
+                    tbody.innerHTML += `
+                        <tr>
+                            <td>#${item.transaction_id}</td>
+                            <td><strong>${item.equipment_name}</strong></td>
+                            <td>${item.worker_name}</td>
+                            <td>${item.project_name}</td>
+                            <td>${item.quantity_borrowed}</td>
+                            <td>${new Date(item.borrow_date).toLocaleString()}</td>
+                            <td><button class="btn" style="padding: 6px 12px; font-size: 12px;" onclick="returnEquipment(${item.transaction_id})">Surrender</button></td>
+                        </tr>
+                    `;
+                });
+            } catch (err) { console.error(err); }
+        }
+
+        // 5. Load History
+        async function loadHistory() {
+            try {
+                const res = await fetch(`${API_BASE}/transaction/history`);
+                const data = await res.json();
+                const tbody = document.getElementById('historyTableBody');
+                tbody.innerHTML = '';
+                data.history.forEach(item => {
+                    const badgeClass = item.status === 'BORROWED' ? 'borrowed' : 'returned';
+                    tbody.innerHTML += `
+                        <tr>
+                            <td>#${item.transaction_id}</td>
+                            <td><strong>${item.equipment_name}</strong></td>
+                            <td>${item.worker_name}</td>
+                            <td>${item.project_name}</td>
+                            <td>${item.quantity_borrowed}</td>
+                            <td>${new Date(item.borrow_date).toLocaleString()}</td>
+                            <td><span class="badge ${badgeClass}">${item.status}</span></td>
+                        </tr>
+                    `;
+                });
+            } catch (err) { console.error(err); }
+        }
+
+        // 6. Return Equipment
+        async function returnEquipment(transaction_id) {
+            try {
+                const res = await fetch(`${API_BASE}/transaction/return/${transaction_id}`, { method: 'PUT' });
+                const data = await res.json();
+                if (res.ok) {
+                    loadEquipment();
+                    loadActiveTools();
+                    loadHistory();
+                } else {
+                    alert(data.error);
+                }
+            } catch (err) { console.error(err); }
+        }
+    </script>
+</body>
+</html>
